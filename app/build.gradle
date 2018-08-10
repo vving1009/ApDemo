@@ -4,7 +4,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.example.administrator.wifidemo"
-        minSdkVersion 19
+        minSdkVersion 17
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
@@ -32,4 +32,9 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    // https://mvnrepository.com/artifact/io.reactivex.rxjava2/rxjava
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.4'
+    // https://mvnrepository.com/artifact/io.reactivex.rxjava2/rxandroid
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'com.google.code.gson:gson:2.8.5'
 }

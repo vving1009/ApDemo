@@ -22,6 +22,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.administrator.wifidemo.wifi.source.WifiApManager;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -41,7 +43,7 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "liwei";
 
     private static final int SERVERPORT = 8191;
 
@@ -89,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         });
         IntentFilter intentFilter = new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED");
         intentFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-        registerReceiver(apReceiver, intentFilter);
+        //registerReceiver(apReceiver, intentFilter);
     }
 
     @Override
@@ -429,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(apReceiver);
+        //unregisterReceiver(apReceiver);
     }
 
 

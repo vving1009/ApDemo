@@ -1,13 +1,18 @@
-package com.example.administrator.wifidemo;
+package com.example.administrator.wifidemo.wifi.source;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.example.administrator.wifidemo.WifiDemoApplication;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -18,17 +23,18 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 public class WifiApManager {
-    private static final String TAG = "WifiApManager";
+    private static final String TAG = "liwei";
 
     public static final int NO_PASS = 0;
     public static final int WEP_PSK = 1;
     public static final int WPA_PSK = 2;
     public static final int WPA2_PSK = 3;
 
+    private static WifiApManager INSTANCE;
+
     private WifiManager wifiManager;
     private WifiConfiguration apConfig;
-
-    private static WifiApManager INSTANCE;
+    private Context mContext;
 
     public static synchronized WifiApManager getInstance() {
         if (INSTANCE == null) {
@@ -37,8 +43,10 @@ public class WifiApManager {
         return INSTANCE;
     }
 
+    @SuppressLint("WifiManagerPotentialLeak")
     private WifiApManager() {
-        wifiManager = (WifiManager) WifiDemoApplication.getInstance().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        mContext = WifiDemoApplication.getInstance().getApplicationContext();
+        wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
         if (!wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(true);
         }
@@ -364,11 +372,11 @@ public class WifiApManager {
     // 提供一个外部接口，传入要连接的无线网
     public void connect(String ssid, String password, WifiCipherType type) {
         //WifiConfiguration wifiConfig = createWifiInfo(ssid, password, type);
-        WifiConfiguration wifiConfig = createWifiInfo(ssid, password, NO_PASS);
+        WifiConfiguration wifiConfig = createWifiInfo(ssid, password, type);
 
 //
         if (wifiConfig == null) {
-            Log.d(TAG, "wifiConfig is null!");
+            Log.d(TAG, "WifiApManager wifiConfig is null!");
             return;
         }
 
@@ -379,18 +387,21 @@ public class WifiApManager {
         }
 
         int netID = wifiManager.addNetwork(wifiConfig);
+        Log.d(TAG, "WifiApManager connect: netID = " + netID);
         boolean enabled = wifiManager.enableNetwork(netID, true);
-        Log.d(TAG, "enableNetwork status enable=" + enabled);
+        Log.d(TAG, "WifiApManager enableNetwork status enable=" + enabled);
         boolean connected = wifiManager.reconnect();
-        Log.d(TAG, "enableNetwork connected=" + connected);
+        Log.d(TAG, "WifiApManager enableNetwork connected=" + connected);
     }
 
     // 查看以前是否也配置过这个网络
     private WifiConfiguration isExsits(String SSID) {
         List<WifiConfiguration> existingConfigs = wifiManager.getConfiguredNetworks();
-        for (WifiConfiguration existingConfig : existingConfigs) {
-            if (existingConfig.SSID.equals("\"" + SSID + "\"")) {
-                return existingConfig;
+        if (existingConfigs != null && existingConfigs.size() > 0) {
+            for (WifiConfiguration existingConfig : existingConfigs) {
+                if (existingConfig.SSID.equals("\"" + SSID + "\"")) {
+                    return existingConfig;
+                }
             }
         }
         return null;
@@ -472,4 +483,37 @@ public class WifiApManager {
         return true;
     }
 
+    /**
+     * 检查wifi是否处开连接状态
+     *
+     * @return
+     */
+    public boolean isWifiConnect() {
+        ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            NetworkInfo mWifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            Log.d(TAG, "WifiApManager isWifiConnect: " + mWifiInfo.isConnected());
+            return mWifiInfo.isConnected();
+        }
+        Log.d(TAG, "WifiApManager isWifiConnect: false");
+        return false;
+    }
+
+    /**
+     * 检查wifi热点是否打开
+     *
+     * @return
+     */
+    @SuppressLint("WifiManagerPotentialLeak")
+    public boolean isApEnabled() {
+        int state;
+         WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        try {
+            Method method = wifiManager.getClass().getMethod("getWifiApState");
+            state = (Integer) method.invoke(wifiManager);
+        } catch (Exception e) {
+            state = 11;   //WIFI_AP_STATE_DISABLED
+        }
+        return 12 == state || 13 == state;  //WIFI_AP_STATE_ENABLING, WIFI_AP_STATE_ENABLED
+    }
 }
